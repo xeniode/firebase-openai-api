@@ -17,6 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from openai_api.views import GenerateResponseView
+from firestore_api.views import StoreResponseView
+ 
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path('generate-response/', GenerateResponseView.as_view(), name='generate-response'),
+    path('store-response/', StoreResponseView.as_view(), name='store-response'),
+
 ]
