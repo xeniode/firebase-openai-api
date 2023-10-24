@@ -3,3 +3,4 @@ djangorestframework
 openai
 firebase_admin
 requests
+os
