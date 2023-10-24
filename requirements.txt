@@ -1,0 +1,5 @@
+Django
+djangorestframework
+openai
+firebase_admin
+requests

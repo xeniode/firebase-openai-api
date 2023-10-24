@@ -1,0 +1,362 @@
+openapi: 3.1.0
+info:
+  version: "1.0.0"
+  title: "OpenAI & Firestore API"
+  description: "API for interacting with OpenAI and storing responses in Firestore."
+servers:
+  - url: 'https://api.example.com/v1'
+    description: 'Production server'
+
+paths:
+  /ask-openai-and-store-response:
+    post:
+      tags:
+        - 'OpenAI'
+      summary: "Ask OpenAI and Store Response"
+      description: "Takes a user's question, queries OpenAI, and stores the response in Firestore."
+      operationId: "askOpenAIAndStore"
+      parameters:
+        - in: 'query'
+          name: 'apiKey'
+          schema:
+            type: 'string'
+          required: true
+          description: 'API key for authentication'
+      requestBody:
+        description: "User's question for OpenAI and conversation history"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                question:
+                  type: "string"
+                  description: "User's question"
+                  example: "What is the meaning of life?"
+                conversation_history:
+                  type: "string"
+                  description: "Conversation history"
+                  example: "What is the meaning of life?\nThe meaning of life is a philosophical question and varies based on perspectives."
+      responses:
+        200:
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: true
+                  openAIResponse:
+                    type: "string"
+                    description: "Response from OpenAI"
+                    example: "The meaning of life is a philosophical question and varies based on perspectives."
+                  docId:
+                    type: "string"
+                    description: "Document ID in Firestore"
+                    example: "1a2b3c4d5e"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: false
+                  message:
+                    type: "string"
+                    example: "Invalid request parameters."
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: false
+                  message:
+                    type: "string"
+                    example: "Invalid API key."
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: false
+                  message:
+                    type: "string"
+                    example: "An error occurred while processing your request."
+
+  /get-response:
+    get:
+      tags:
+        - 'Firestore'
+      summary: "Get Stored Response"
+      description: "Retrieves a response from OpenAI that was previously stored in Firestore by a given document ID."
+      operationId: "getResponse"
+      parameters:
+        - in: 'query'
+          name: 'docId'
+          schema:
+            type: 'string'
+          required: true
+          description: 'Document ID of the stored response'
+      responses:
+        200:
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: true
+                  openAIResponse:
+                    type: "string"
+                    description: "Response from OpenAI"
+                    example: "The meaning of life is a philosophical question and varies based on perspectives."
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: false
+                  message:
+                    type: "string"
+                    example: "Invalid request parameters."
+        404:
+          description: "Not Found"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: false
+                  message:
+                    type: "string"
+                    example: "Document not found."
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: false
+                  message:
+                    type: "string"
+                    example: "An error occurred while processing your request."
+  /upload-file:
+    post:
+      tags:
+        - 'Firebase Storage'
+      summary: "Upload File"
+      description: "Allows users to upload files, which can then be processed or analyzed using OpenAI's models."
+      operationId: "uploadFile"
+      requestBody:
+        description: "File to be uploaded"
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: "object"
+              properties:
+                file:
+                  type: "string"
+                  format: "binary"
+      responses:
+        200:
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: true
+                  fileUrl:
+                    type: "string"
+                    description: "Firebase Storage link to the uploaded file"
+                    example: "https://firebase-storage-link-to-uploaded-file.com"
+                  message:
+                    type: "string"
+                    example: "File uploaded successfully."
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: false
+                  message:
+                    type: "string"
+                    example: "Invalid request parameters."
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: false
+                  message:
+                    type: "string"
+                    example: "An error occurred while processing your request."
+  /process-file-content:
+    post:
+      tags:
+        - 'OpenAI'
+      summary: "Process File Content"
+      description: "Allows users to send a file URL to get its content processed by OpenAI."
+      operationId: "processFileContent"
+      requestBody:
+        description: "File URL and action to be performed"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                fileUrl:
+                  type: "string"
+                  description: "Firebase Storage link to the file"
+                  example: "https://firebase-storage-link-to-uploaded-file.com"
+                action:
+                  type: "string"
+                  description: "Action to be performed on the file content"
+                  example: "summarize"
+      responses:
+        200:
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: true
+                  processedContent:
+                    type: "string"
+                    description: "Processed content of the file"
+                    example: "This is the summarized content of the file."
+                  model:
+                    type: "string"
+                    description: "OpenAI model used for processing"
+                    example: "gpt-4.0-turbo"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: false
+                  message:
+                    type: "string"
+                    example: "Invalid request parameters."
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: false
+                  message:
+                    type: "string"
+                    example: "An error occurred while processing your request."
+  /text-summarization:
+    post:
+      tags:
+        - 'OpenAI'
+      summary: "Text Summarization"
+      description: "Summarizes a long passage of text."
+      operationId: "textSummarization"
+      requestBody:
+        description: "Text to be summarized and maximum number of tokens"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                text:
+                  type: "string"
+                  description: "A long passage of text that needs summarization"
+                  example: "A long passage of text that needs summarization..."
+                max_tokens:
+                  type: "integer"
+                  description: "Maximum number of tokens for the summary"
+                  example: 100
+      responses:
+        200:
+          description: "Successful Response"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  summary:
+                    type: "string"
+                    description: "A concise summary of the long passage"
+                    example: "A concise summary of the long passage..."
+                  model:
+                    type: "string"
+                    description: "OpenAI model used for summarization"
+                    example: "gpt-4.0-turbo"
+        400:
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: false
+                  message:
+                    type: "string"
+                    example: "Invalid request parameters."
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  success:
+                    type: "boolean"
+                    example: false
+                  message:
+                    type: "string"
+                    example: "An error occurred while processing your request."
